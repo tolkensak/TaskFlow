@@ -1,6 +1,10 @@
 // backend/src/modules/auth/auth.service.ts
 
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -57,7 +61,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    if (user && await bcrypt.compare(password, user.password)) {
+    if (user && (await bcrypt.compare(password, user.password))) {
       const { password, ...result } = user;
       return result;
     }
@@ -88,20 +92,21 @@ export class AuthService {
     return this.usersService.findOne(userId);
   }
 
-    // In the generateTokens method
-    private generateTokens(user: User): AuthPayload {
-        const payload: any = { sub: user.id, email: user.email };
+  private generateTokens(user: User): AuthPayload {
+    const payload = { sub: user.id, email: user.email };
 
-        const accessToken = this.jwtService.sign(payload);
-        const refreshToken = this.jwtService.sign(payload, {
-            secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-            expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION'),
-        });
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      expiresIn: this.configService.get<string>(
+        'JWT_REFRESH_EXPIRATION',
+      ) as any,
+    });
 
-        return {
-            accessToken,
-            refreshToken,
-            user,
-        };
-    }
+    return {
+      accessToken,
+      refreshToken,
+      user,
+    };
+  }
 }
