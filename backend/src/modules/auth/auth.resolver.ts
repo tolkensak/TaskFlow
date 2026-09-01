@@ -2,11 +2,11 @@
 
 import { Resolver, Mutation, Query, Args, Context } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthPayload } from './dto/auth.payload';
 import { RegisterInput, LoginInput } from './dto/auth.input';
 import { User } from '../users/entities/user.entity';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Resolver()
@@ -31,14 +31,13 @@ export class AuthResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))  // ✅ Use AuthGuard directly
   async logout(@CurrentUser() user: User): Promise<boolean> {
-    // In a real app, you might want to blacklist the token here
     return true;
   }
 
   @Query(() => User)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))  // ✅ Use AuthGuard directly
   async me(@CurrentUser() user: User): Promise<User> {
     return user;
   }

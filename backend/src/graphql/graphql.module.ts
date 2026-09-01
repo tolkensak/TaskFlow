@@ -12,7 +12,7 @@ import { join } from 'path';
       autoSchemaFile: join(process.cwd(), 'src/graphql/schema.gql'),
       sortSchema: true,
       playground: true,
-      context: ({ req }: { req: any }) => ({ req }),
+      context: ({ req }) => ({ req }),
     }),
   ],
 })
