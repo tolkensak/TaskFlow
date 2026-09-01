@@ -1,4 +1,4 @@
-// backend/src/modules/users/entities/user.entity.ts
+// src/modules/users/entities/user.entity.ts
 
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { ObjectType, Field, ID } from '@nestjs/graphql';
