@@ -11,34 +11,34 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Resolver()
 export class AuthResolver {
-  constructor(private authService: AuthService) {}
+    constructor(private authService: AuthService) {}
 
-  @Mutation(() => AuthPayload)
-  async register(@Args('input') input: RegisterInput): Promise<AuthPayload> {
-    return this.authService.register(input);
-  }
+    @Mutation(() => AuthPayload)
+    async register(@Args('input') input: RegisterInput): Promise<AuthPayload> {
+        return this.authService.register(input);
+    }
 
-  @Mutation(() => AuthPayload)
-  async login(@Args('input') input: LoginInput): Promise<AuthPayload> {
-    return this.authService.login(input);
-  }
+    @Mutation(() => AuthPayload)
+    async login(@Args('input') input: LoginInput): Promise<AuthPayload> {
+        return this.authService.login(input);
+    }
 
-  @Mutation(() => AuthPayload)
-  async refreshToken(
-    @Args('refreshToken') refreshToken: string,
-  ): Promise<AuthPayload> {
-    return this.authService.refreshToken(refreshToken);
-  }
+    @Mutation(() => AuthPayload)
+    async refreshToken(
+        @Args('refreshToken') refreshToken: string,
+    ): Promise<AuthPayload> {
+        return this.authService.refreshToken(refreshToken);
+    }
 
-  @Mutation(() => Boolean)
-  @UseGuards(AuthGuard('jwt'))  // ✅ Use AuthGuard directly
-  async logout(@CurrentUser() user: User): Promise<boolean> {
-    return true;
-  }
+    @Mutation(() => Boolean)
+    @UseGuards(AuthGuard('jwt')) // ✅ Use AuthGuard directly
+    async logout(@CurrentUser() user: User): Promise<boolean> {
+        return true;
+    }
 
-  @Query(() => User)
-  @UseGuards(AuthGuard('jwt'))  // ✅ Use AuthGuard directly
-  async me(@CurrentUser() user: User): Promise<User> {
-    return user;
-  }
+    @Query(() => User)
+    @UseGuards(AuthGuard('jwt')) // ✅ Use AuthGuard directly
+    async me(@CurrentUser() user: User): Promise<User> {
+        return user;
+    }
 }
