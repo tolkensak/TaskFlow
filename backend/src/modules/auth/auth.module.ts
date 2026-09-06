@@ -13,7 +13,7 @@ import { UsersModule } from '../users/users.module';
 @Module({
     imports: [
         UsersModule,
-        PassportModule,
+        PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.registerAsync({
             imports: [ConfigModule],
             useFactory: async (configService: ConfigService) => ({
@@ -22,7 +22,7 @@ import { UsersModule } from '../users/users.module';
                     expiresIn: configService.get<string>(
                         'JWT_EXPIRATION',
                         '15m',
-                    ) as any,
+                    ),
                 },
             }),
             inject: [ConfigService],
@@ -31,5 +31,4 @@ import { UsersModule } from '../users/users.module';
     providers: [AuthResolver, AuthService, JwtStrategy, LocalStrategy],
     exports: [AuthService],
 })
-
 export class AuthModule {}

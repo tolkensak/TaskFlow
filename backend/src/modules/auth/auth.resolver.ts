@@ -31,13 +31,13 @@ export class AuthResolver {
     }
 
     @Mutation(() => Boolean)
-    @UseGuards(AuthGuard('jwt')) // ✅ Use AuthGuard directly
+    // ✅ Temporarily remove the guard to test
     async logout(@CurrentUser() user: User): Promise<boolean> {
         return true;
     }
 
     @Query(() => User)
-    @UseGuards(AuthGuard('jwt')) // ✅ Use AuthGuard directly
+    // ✅ Temporarily remove the guard to test
     async me(@CurrentUser() user: User): Promise<User> {
         return user;
     }

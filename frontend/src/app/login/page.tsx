@@ -1,4 +1,4 @@
-// frontend/src/app/(auth)/login/page.tsx
+// frontend/src/app/login/page.tsx
 
 "use client";
 
@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMutation } from "@apollo/client";
 import { LOGIN_MUTATION } from "@/graphql/mutations/auth";
-import { GET_ME } from "@/graphql/queries/user";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -17,99 +16,78 @@ export default function LoginPage() {
 
     const [login, { loading }] = useMutation(LOGIN_MUTATION, {
         onCompleted: (data) => {
-            // ✅ Store tokens in localStorage
+            console.log("✅ Login successful:", data);
             localStorage.setItem("accessToken", data.login.accessToken);
             localStorage.setItem("refreshToken", data.login.refreshToken);
-
-            // ✅ Redirect to dashboard
-            router.push("/dashboard");
+            // ✅ Use replace instead of push to prevent back navigation issues
+            router.replace("/dashboard");
         },
         onError: (error) => {
+            console.error("❌ Login error:", error);
             setError(error.message || "Failed to login");
         },
-        refetchQueries: [{ query: GET_ME }],
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
-
         try {
-            await login({
-                variables: {
-                    input: { email, password },
-                },
-            });
+            await login({ variables: { input: { email, password } } });
         } catch (err) {
-            // Error is handled by onError
+            console.error("❌ Submit error:", err);
         }
     };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-            <div className="max-w-md w-full space-y-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-                <div>
-                    <h2 className="text-3xl font-bold text-center">
-                        Sign in to TaskFlow
-                    </h2>
-                    <p className="mt-2 text-center text-gray-600 dark:text-gray-400">
-                        Manage your tasks efficiently
-                    </p>
-                </div>
+            <div className="max-w-md w-full p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+                <h2 className="text-3xl font-bold text-center mb-6">Sign In</h2>
 
                 {error && (
-                    <div className="p-3 bg-red-100 text-red-700 rounded-lg">
+                    <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label
-                            htmlFor="email"
-                            className="block text-sm font-medium"
-                        >
+                        <label className="block text-sm font-medium mb-1">
                             Email
                         </label>
                         <input
-                            id="email"
                             type="email"
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="mt-1 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                             placeholder="you@example.com"
+                            autoComplete="email"
                         />
                     </div>
-
                     <div>
-                        <label
-                            htmlFor="password"
-                            className="block text-sm font-medium"
-                        >
+                        <label className="block text-sm font-medium mb-1">
                             Password
                         </label>
                         <input
-                            id="password"
                             type="password"
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="mt-1 w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                             placeholder="••••••••"
+                            autoComplete="current-password"
                         />
                     </div>
-
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                        className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
                     >
                         {loading ? "Signing in..." : "Sign In"}
                     </button>
                 </form>
 
-                <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-center text-sm mt-4 text-gray-600 dark:text-gray-400">
                     Don't have an account?{" "}
                     <Link
                         href="/register"

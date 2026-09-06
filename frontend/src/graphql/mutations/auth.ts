@@ -30,23 +30,3 @@ export const LOGIN_MUTATION = gql`
         }
     }
 `;
-
-export const REFRESH_TOKEN_MUTATION = gql`
-    mutation RefreshToken($refreshToken: String!) {
-        refreshToken(refreshToken: $refreshToken) {
-            accessToken
-            refreshToken
-            user {
-                id
-                email
-                name
-            }
-        }
-    }
-`;
-
-export const LOGOUT_MUTATION = gql`
-    mutation Logout {
-        logout
-    }
-`;
