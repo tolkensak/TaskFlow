@@ -7,13 +7,11 @@ import * as passport from 'passport';
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
-    // ✅ Enable CORS for frontend
     app.enableCors({
-        origin: 'http://localhost:3000',
+        origin: ['http://localhost:3000', 'http://localhost:3001'],
         credentials: true,
     });
 
-    // ✅ Initialize Passport (THIS IS CRITICAL!)
     app.use(passport.initialize());
 
     const port = process.env.PORT ?? 3001;
@@ -22,5 +20,9 @@ async function bootstrap() {
     console.log(
         `🚀 GraphQL Playground available at http://localhost:${port}/graphql`,
     );
+    console.log(
+        `🚀 WebSocket endpoint available at ws://localhost:${port}/graphql`,
+    );
 }
+
 bootstrap();

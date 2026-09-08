@@ -8,10 +8,22 @@ type AuthPayload {
   user: User!
 }
 
+input CreateNotificationInput {
+  data: JSON
+  message: String!
+  type: String!
+  userId: String!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
 
 input LoginInput {
   email: String!
@@ -19,20 +31,36 @@ input LoginInput {
 }
 
 type Mutation {
+  createNotification(input: CreateNotificationInput!): Notification!
   login(input: LoginInput!): AuthPayload!
   logout: Boolean!
   refreshToken(refreshToken: String!): AuthPayload!
   register(input: RegisterInput!): AuthPayload!
 }
 
+type Notification {
+  createdAt: DateTime!
+  data: JSON
+  id: ID!
+  message: String!
+  read: Boolean!
+  type: String!
+  userId: String!
+}
+
 type Query {
   me: User!
+  notifications: [Notification!]!
 }
 
 input RegisterInput {
   email: String!
   name: String!
   password: String!
+}
+
+type Subscription {
+  notificationReceived(userId: String!): Notification!
 }
 
 type User {
