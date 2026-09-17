@@ -1,5 +1,4 @@
 // backend/src/modules/auth/auth.module.ts
-
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -8,12 +7,13 @@ import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UsersModule } from '../users/users.module';
 
 @Module({
     imports: [
         UsersModule,
-        PassportModule.register({ defaultStrategy: 'jwt' }),
+        PassportModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
             useFactory: async (configService: ConfigService) => ({
@@ -28,7 +28,13 @@ import { UsersModule } from '../users/users.module';
             inject: [ConfigService],
         }),
     ],
-    providers: [AuthResolver, AuthService, JwtStrategy, LocalStrategy],
-    exports: [AuthService],
+    providers: [
+        AuthResolver,
+        AuthService,
+        JwtStrategy,
+        LocalStrategy,
+        JwtAuthGuard, // ✅ Register the custom guard
+    ],
+    exports: [AuthService, JwtAuthGuard, JwtModule], // ✅ Export JwtModule for the guard
 })
 export class AuthModule {}

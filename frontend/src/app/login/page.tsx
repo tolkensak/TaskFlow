@@ -30,8 +30,15 @@ export default function LoginPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+        console.log("🚀 Login button clicked!");
+        console.log("📧 Email:", email);
+        console.log("🔑 Password length:", password.length);
+
         try {
-            await login({ variables: { input: { email, password } } });
+            const result = await login({
+                variables: { input: { email, password } },
+            });
+            console.log("✅ Mutation result:", result);
         } catch (err) {
             console.error("❌ Submit error:", err);
         }

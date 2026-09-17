@@ -1,12 +1,12 @@
 // backend/src/modules/auth/auth.resolver.ts
-import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthPayload } from './dto/auth.payload';
 import { RegisterInput, LoginInput } from './dto/auth.input';
 import { User } from '../users/entities/user.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Resolver()
 export class AuthResolver {
@@ -29,16 +29,16 @@ export class AuthResolver {
         return this.authService.refreshToken(refreshToken);
     }
 
-    // ✅ Re-enable the guard on logout
+    // ✅ Use the custom guard
     @Mutation(() => Boolean)
-    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(JwtAuthGuard)
     async logout(@CurrentUser() user: User): Promise<boolean> {
         return true;
     }
 
-    // ✅ Re-enable the guard on me
+    // ✅ Use the custom guard
     @Query(() => User)
-    @UseGuards(AuthGuard('jwt'))
+    @UseGuards(JwtAuthGuard)
     async me(@CurrentUser() user: User): Promise<User> {
         return user;
     }

@@ -1,8 +1,8 @@
 // backend/src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as session from 'express-session';
-import * as passport from 'passport';
+import session from 'express-session';
+import passport from 'passport';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -12,23 +12,23 @@ async function bootstrap() {
         credentials: true,
     });
 
-    // ✅ Add session middleware BEFORE passport
     app.use(
         session({
             secret: process.env.JWT_SECRET || 'default-secret',
             resave: false,
             saveUninitialized: false,
-            cookie: { maxAge: 60000 * 60 * 24 }, // 1 day
+            cookie: { maxAge: 60000 * 60 * 24 },
         }),
     );
 
-    // ✅ Initialize Passport
     app.use(passport.initialize());
-    app.use(passport.session());
+    // ✅ REMOVE passport.session() - not needed with custom guard
 
     const port = process.env.PORT ?? 3001;
     await app.listen(port);
     console.log(`🚀 Server running on http://localhost:${port}`);
-    console.log(`🚀 GraphQL Playground available at http://localhost:${port}/graphql`);
+    console.log(
+        `🚀 GraphQL Playground available at http://localhost:${port}/graphql`,
+    );
 }
 bootstrap();
