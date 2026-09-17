@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PresenceModule } from './modules/presence/presence.module';
 import { User } from './modules/users/entities/user.entity';
 import { Notification } from './modules/notifications/entities/notification.entity';
 
@@ -43,6 +44,7 @@ import { Notification } from './modules/notifications/entities/notification.enti
         AuthModule,
         UsersModule,
         NotificationsModule,
+        PresenceModule, // ✅ Add PresenceModule
     ],
 })
 

@@ -1,28 +1,34 @@
 // backend/src/main.ts
-
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import * as session from 'express-session';
 import * as passport from 'passport';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
     app.enableCors({
-        origin: ['http://localhost:3000', 'http://localhost:3001'],
+        origin: 'http://localhost:3000',
         credentials: true,
     });
 
+    // ✅ Add session middleware BEFORE passport
+    app.use(
+        session({
+            secret: process.env.JWT_SECRET || 'default-secret',
+            resave: false,
+            saveUninitialized: false,
+            cookie: { maxAge: 60000 * 60 * 24 }, // 1 day
+        }),
+    );
+
+    // ✅ Initialize Passport
     app.use(passport.initialize());
+    app.use(passport.session());
 
     const port = process.env.PORT ?? 3001;
     await app.listen(port);
     console.log(`🚀 Server running on http://localhost:${port}`);
-    console.log(
-        `🚀 GraphQL Playground available at http://localhost:${port}/graphql`,
-    );
-    console.log(
-        `🚀 WebSocket endpoint available at ws://localhost:${port}/graphql`,
-    );
+    console.log(`🚀 GraphQL Playground available at http://localhost:${port}/graphql`);
 }
-
 bootstrap();

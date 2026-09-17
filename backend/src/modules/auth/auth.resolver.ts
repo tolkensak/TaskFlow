@@ -1,6 +1,5 @@
 // backend/src/modules/auth/auth.resolver.ts
-
-import { Resolver, Mutation, Query, Args, Context } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
@@ -30,14 +29,16 @@ export class AuthResolver {
         return this.authService.refreshToken(refreshToken);
     }
 
+    // ✅ Re-enable the guard on logout
     @Mutation(() => Boolean)
-    // ✅ Temporarily remove the guard to test
+    @UseGuards(AuthGuard('jwt'))
     async logout(@CurrentUser() user: User): Promise<boolean> {
         return true;
     }
 
+    // ✅ Re-enable the guard on me
     @Query(() => User)
-    // ✅ Temporarily remove the guard to test
+    @UseGuards(AuthGuard('jwt'))
     async me(@CurrentUser() user: User): Promise<User> {
         return user;
     }

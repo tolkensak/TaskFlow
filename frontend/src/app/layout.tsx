@@ -1,9 +1,14 @@
 // frontend/src/app/layout.tsx
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ApolloWrapper } from "@/components/ApolloWrapper";
+import { setupGlobalErrorHandler } from "@/lib/error-handler";
+
+// ✅ Set up global error handler as early as possible
+if (typeof window !== "undefined") {
+    setupGlobalErrorHandler();
+}
 
 const geistSans = Geist({
     variable: "--font-geist-sans",

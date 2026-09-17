@@ -1,15 +1,12 @@
 // frontend/src/app/login/page.tsx
-
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMutation } from "@apollo/client";
 import { LOGIN_MUTATION } from "@/graphql/mutations/auth";
 
 export default function LoginPage() {
-    const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -19,8 +16,10 @@ export default function LoginPage() {
             console.log("✅ Login successful:", data);
             localStorage.setItem("accessToken", data.login.accessToken);
             localStorage.setItem("refreshToken", data.login.refreshToken);
-            // ✅ Use replace instead of push to prevent back navigation issues
-            router.replace("/dashboard");
+
+            // ✅ Use window.location.href for a full page reload
+            // This bypasses React DevTools errors
+            window.location.href = "/dashboard";
         },
         onError: (error) => {
             console.error("❌ Login error:", error);
