@@ -13,6 +13,9 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { PresenceModule } from './modules/presence/presence.module';
 import { User } from './modules/users/entities/user.entity';
 import { Notification } from './modules/notifications/entities/notification.entity';
+import { TasksModule } from './modules/tasks/tasks.module';
+import { Task } from './modules/tasks/entities/task.entity';
+import { TaskAssignment } from './modules/tasks/entities/task-assignment.entity';
 
 @Module({
     imports: [
@@ -35,7 +38,7 @@ import { Notification } from './modules/notifications/entities/notification.enti
             useFactory: (configService: ConfigService) => ({
                 type: 'postgres',
                 url: configService.get<string>('DATABASE_URL'),
-                entities: [User, Notification],
+                entities: [User, Notification, Task, TaskAssignment],
                 synchronize: true,
             }),
             inject: [ConfigService],
@@ -45,6 +48,7 @@ import { Notification } from './modules/notifications/entities/notification.enti
         UsersModule,
         NotificationsModule,
         PresenceModule, // ✅ Add PresenceModule
+        TasksModule, // ✅ Add TasksModule
     ],
 })
 
