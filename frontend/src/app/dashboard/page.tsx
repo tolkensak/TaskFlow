@@ -1,136 +1,127 @@
-// frontend/src/app/dashboard/page.tsx
+// frontend/src/app/board/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { Loader2 } from "lucide-react";
+import KanbanBoard from "@/components/kanban/KanbanBoard";
 import { GET_ME } from "@/graphql/queries/user";
+import Link from "next/link";
 
-export default function DashboardPage() {
-    const [isLoaded, setIsLoaded] = useState(false);
+const GET_TASKS = gql`
+    query GetTasks($projectId: String) {
+        tasks(projectId: $projectId) {
+            id
+            title
+            description
+            status
+            priority
+            dueDate
+            createdAt
+            author {
+                id
+                name
+                email
+            }
+            assignments {
+                id
+                user {
+                    id
+                    name
+                    email
+                }
+            }
+        }
+    }
+`;
 
-    const { loading, error, data } = useQuery(GET_ME, {
-        fetchPolicy: "network-only",
+export default function BoardPage() {
+    const router = useRouter();
+    const {
+        loading: userLoading,
+        error: userError,
+        data: userData,
+    } = useQuery(GET_ME);
+
+    const {
+        loading: tasksLoading,
+        error: tasksError,
+        data: tasksData,
+        refetch,
+    } = useQuery(GET_TASKS, {
+        variables: { projectId: "default-project" },
+        skip: !userData?.me,
     });
 
     useEffect(() => {
-        // ✅ Check token
-        const token =
-            typeof window !== "undefined"
-                ? localStorage.getItem("accessToken")
-                : null;
-        if (!token && !loading) {
-            window.location.href = "/login";
-            return;
+        if (userError) {
+            router.push("/login");
         }
+    }, [userError, router]);
 
-        // ✅ Handle errors
-        if (error) {
-            console.error("❌ Dashboard error:", error);
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
-            window.location.href = "/login";
-        }
-
-        // ✅ Mark as loaded
-        if (data?.me && !loading) {
-            setIsLoaded(true);
-        }
-    }, [error, loading, data]);
-
-    // ✅ Log when component renders
-    console.log(
-        "🔄 Dashboard rendered, loading:",
-        loading,
-        "isLoaded:",
-        isLoaded,
-    );
-
-    if (loading || !isLoaded) {
+    if (userLoading || tasksLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600 dark:text-gray-400">
-                        Loading your dashboard...
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                    <p className="mt-4 text-muted-foreground">
+                        Loading your board...
                     </p>
                 </div>
             </div>
         );
     }
 
-    if (!data?.me) {
+    if (tasksError) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-gray-600 dark:text-gray-400">
-                        Unable to load user data
+                    <p className="text-destructive">
+                        Error loading tasks: {tasksError.message}
                     </p>
-                    <button
-                        onClick={() => (window.location.href = "/login")}
-                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                        Go to Login
-                    </button>
                 </div>
             </div>
         );
     }
-
-    const user = data.me;
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            <nav className="bg-white dark:bg-gray-800 shadow p-4">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">TaskFlow</h1>
-                    <div className="flex items-center gap-4">
-                        <span className="text-gray-700 dark:text-gray-300">
-                            Welcome, {user.name}!
-                        </span>
+        <div className="min-h-screen bg-background">
+            <header className="border-b bg-background">
+                <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold">TaskFlow</h1>
+                        <p className="text-sm text-muted-foreground">
+                            Welcome, {userData?.me?.name}!
+                        </p>
+                    </div>
+                    <div>
+                        <Link
+                            href="/board"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mr-2"
+                        >
+                            📋 Open Kanban Board
+                        </Link>
                         <button
                             onClick={() => {
                                 localStorage.removeItem("accessToken");
                                 localStorage.removeItem("refreshToken");
-                                window.location.href = "/login";
+                                router.push("/login");
                             }}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                         >
                             Sign Out
                         </button>
                     </div>
                 </div>
-            </nav>
+            </header>
 
-            <main className="max-w-7xl mx-auto p-6">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <h2 className="text-xl font-semibold mb-4">
-                        Welcome to TaskFlow!
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400">
-                        You are logged in as: <strong>{user.email}</strong>
-                    </p>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                        User ID:{" "}
-                        <span className="font-mono text-sm">{user.id}</span>
-                    </p>
-                </div>
-
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                        <h3 className="text-lg font-semibold mb-2">Projects</h3>
-                        <p className="text-3xl font-bold text-blue-600">0</p>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                        <h3 className="text-lg font-semibold mb-2">Tasks</h3>
-                        <p className="text-3xl font-bold text-green-600">0</p>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                        <h3 className="text-lg font-semibold mb-2">
-                            Team Members
-                        </h3>
-                        <p className="text-3xl font-bold text-purple-600">0</p>
-                    </div>
-                </div>
+            <main className="container mx-auto px-4 py-8">
+                <KanbanBoard
+                    tasks={tasksData?.tasks || []}
+                    onTasksChange={refetch}
+                />
             </main>
         </div>
     );
