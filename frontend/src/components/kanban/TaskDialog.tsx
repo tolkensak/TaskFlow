@@ -1,4 +1,3 @@
-// src/components/kanban/TaskDialog.tsx
 "use client";
 
 import {
@@ -10,35 +9,22 @@ import {
 } from "@/components/ui/dialog";
 
 interface TaskDialogProps {
-    task: any | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSuccess?: () => void;
 }
 
-export default function TaskDialog({
-    task,
-    open,
-    onOpenChange,
-    onSuccess,
-}: TaskDialogProps) {
+export function TaskDialog({ open, onOpenChange }: TaskDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>
-                        {task ? "Edit Task" : "Create Task"}
-                    </DialogTitle>
+                    <DialogTitle>Create Task</DialogTitle>
                     <DialogDescription>
-                        {task
-                            ? "Update task details"
-                            : "Add a new task to your board"}
+                        Add a new task to your board
                     </DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
-                    <p className="text-sm text-muted-foreground">
-                        Task form coming next session...
-                    </p>
+                <div className="py-6 text-sm text-slate-400">
+                    Task form coming next session...
                 </div>
             </DialogContent>
         </Dialog>

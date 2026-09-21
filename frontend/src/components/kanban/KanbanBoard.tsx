@@ -6,8 +6,8 @@ import { useMutation, gql } from "@apollo/client";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import KanbanColumn from "./KanbanColumn";
-import TaskDialog from "./TaskDialog";
+import { KanbanColumn } from "./KanbanColumn";
+import { TaskDialog } from "./TaskDialog";
 
 const UPDATE_TASK_STATUS = gql`
     mutation UpdateTaskStatus($id: String!, $input: UpdateTaskInput!) {

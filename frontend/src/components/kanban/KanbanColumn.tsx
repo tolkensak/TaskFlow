@@ -1,95 +1,51 @@
-// src/components/kanban/KanbanColumn.tsx
 "use client";
 
-import { useState } from "react";
-import TaskCard from "./TaskCard";
+import { TaskCard } from "./TaskCard";
 
 interface Task {
     id: string;
     title: string;
     description?: string;
-    status: string;
-    priority: string;
-    dueDate?: string;
-    author: { id: string; name: string; email: string };
-    assignments: Array<{
-        id: string;
-        user: { id: string; name: string; email: string };
-    }>;
+    priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+    subtaskCount?: number;
 }
 
 interface KanbanColumnProps {
-    status: string;
     title: string;
-    color: string;
+    icon: string;
     tasks: Task[];
-    onDragStart: (taskId: string) => void;
-    onDrop: (status: string) => void;
-    onTaskClick: (task: Task) => void;
-    isDragging: boolean;
+    accent: string;
 }
 
-export default function KanbanColumn({
-    status,
+export function KanbanColumn({
     title,
-    color,
+    icon,
     tasks,
-    onDragStart,
-    onDrop,
-    onTaskClick,
-    isDragging,
+    accent,
 }: KanbanColumnProps) {
-    const [isOver, setIsOver] = useState(false);
-
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsOver(true);
-    };
-
-    const handleDragLeave = () => {
-        setIsOver(false);
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsOver(false);
-        onDrop(status);
-    };
-
     return (
         <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`
-        rounded-lg p-4 min-h-[500px] transition-all
-        ${color}
-        ${isOver && isDragging ? "ring-2 ring-primary ring-offset-2" : ""}
-      `}
+            className={cn("flex flex-col rounded-lg p-4 min-h-[400px]", accent)}
         >
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-sm">{title}</h3>
-                <span className="text-xs bg-background/50 px-2 py-1 rounded">
-                    {tasks.length}
-                </span>
+            <div className="mb-4 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+                    <span>{icon}</span>
+                    {title}
+                </h3>
+                <span className="text-xs text-slate-400">{tasks.length}</span>
             </div>
-
-            <div className="space-y-2">
-                {tasks.map((task) => (
-                    <TaskCard
-                        key={task.id}
-                        task={task}
-                        onDragStart={onDragStart}
-                        onClick={() => onTaskClick(task)}
-                    />
-                ))}
-
-                {tasks.length === 0 && (
-                    <div className="text-center py-8 text-xs text-muted-foreground">
+            <div className="flex flex-col gap-2">
+                {tasks.length === 0 ? (
+                    <p className="py-8 text-center text-xs text-slate-500">
                         No tasks here
-                    </div>
+                    </p>
+                ) : (
+                    tasks.map((task) => <TaskCard key={task.id} {...task} />)
                 )}
             </div>
         </div>
     );
 }
+
+// (add this import at the top)
+import { cn } from "@/lib/utils";
