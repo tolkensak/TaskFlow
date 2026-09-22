@@ -8,6 +8,14 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KanbanColumn } from "./KanbanColumn";
 import { TaskDialog } from "./TaskDialog";
+import type { Task, TaskStatus } from "@/types/task";
+
+const columns: { status: TaskStatus; title: string; color: string }[] = [
+    { status: "TODO", title: "📋 To Do", color: "bg-slate-900" },
+    { status: "IN_PROGRESS", title: "🚧 In Progress", color: "bg-blue-950" },
+    { status: "REVIEW", title: "👀 Review", color: "bg-amber-950" },
+    { status: "DONE", title: "✅ Done", color: "bg-green-950" },
+];
 
 const UPDATE_TASK_STATUS = gql`
     mutation UpdateTaskStatus($id: String!, $input: UpdateTaskInput!) {
@@ -20,30 +28,6 @@ const UPDATE_TASK_STATUS = gql`
 
 const TASK_STATUSES = ["TODO", "IN_PROGRESS", "REVIEW", "DONE"];
 
-const STATUS_LABELS = {
-    TODO: { title: "📋 To Do", color: "bg-slate-100 dark:bg-slate-800" },
-    IN_PROGRESS: {
-        title: "🚧 In Progress",
-        color: "bg-blue-50 dark:bg-blue-950",
-    },
-    REVIEW: { title: "👀 Review", color: "bg-yellow-50 dark:bg-yellow-950" },
-    DONE: { title: "✅ Done", color: "bg-green-50 dark:bg-green-950" },
-};
-
-interface Task {
-    id: string;
-    title: string;
-    description?: string;
-    status: string;
-    priority: string;
-    dueDate?: string;
-    author: { id: string; name: string; email: string };
-    assignments: Array<{
-        id: string;
-        user: { id: string; name: string; email: string };
-    }>;
-}
-
 interface KanbanBoardProps {
     tasks: Task[];
     onTasksChange?: () => void;
@@ -53,7 +37,7 @@ export default function KanbanBoard({
     tasks,
     onTasksChange,
 }: KanbanBoardProps) {
-    const [draggedTask, setDraggedTask] = useState<string | null>(null);
+    const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -82,30 +66,30 @@ export default function KanbanBoard({
      * Handle drag start
      */
     const handleDragStart = (taskId: string) => {
-        setDraggedTask(taskId);
+        setDraggedTaskId(taskId);
     };
 
     /**
      * Handle drop on a column
      */
     const handleDrop = async (newStatus: string) => {
-        if (!draggedTask) return;
+        if (!draggedTaskId) return;
 
-        const task = tasks.find((t) => t.id === draggedTask);
+        const task = tasks.find((t) => t.id === draggedTaskId);
         if (!task || task.status === newStatus) {
-            setDraggedTask(null);
+            setDraggedTaskId(null);
             return;
         }
 
         try {
             await updateTaskStatus({
                 variables: {
-                    id: draggedTask,
+                    id: draggedTaskId,
                     input: { status: newStatus },
                 },
             });
         } finally {
-            setDraggedTask(null);
+            setDraggedTaskId(null);
         }
     };
 
@@ -138,23 +122,20 @@ export default function KanbanBoard({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {TASK_STATUSES.map((status) => (
+                {columns.map((column) => (
                     <KanbanColumn
-                        key={status}
-                        status={status}
-                        title={
-                            STATUS_LABELS[status as keyof typeof STATUS_LABELS]
-                                .title
-                        }
-                        color={
-                            STATUS_LABELS[status as keyof typeof STATUS_LABELS]
-                                .color
-                        }
-                        tasks={tasksByStatus[status] || []}
-                        onDragStart={handleDragStart}
+                        key={column.status}
+                        status={column.status}
+                        title={column.title}
+                        color={column.color}
+                        tasks={tasks}
+                        isDragging={draggedTaskId !== null}
+                        onDragStart={(taskId) => setDraggedTaskId(taskId)}
                         onDrop={handleDrop}
-                        onTaskClick={handleTaskClick}
-                        isDragging={!!draggedTask}
+                        onTaskClick={(task) => {
+                            setSelectedTask(task);
+                            setDialogOpen(true);
+                        }}
                     />
                 ))}
             </div>

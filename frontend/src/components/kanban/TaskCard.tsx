@@ -1,29 +1,20 @@
+//src/components/kanban/TaskCard.tsx
 "use client";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import type { Task } from "@/types/task";
 
-interface TaskCardProps {
-    id: string;
-    title: string;
-    description?: string;
-    priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-    subtaskCount?: number;
-}
+type TaskCardProps = Pick<Task, "title" | "description" | "priority" | "subtaskCount">;
 
-const priorityColors: Record<string, string> = {
-    LOW: "bg-slate-500",
-    MEDIUM: "bg-blue-500",
-    HIGH: "bg-orange-500",
-    URGENT: "bg-red-600",
+const priorityColors: Record<Task["priority"], string> = {
+  LOW: "bg-slate-500",
+  MEDIUM: "bg-blue-500",
+  HIGH: "bg-orange-500",
+  URGENT: "bg-red-600",
 };
 
-export function TaskCard({
-    title,
-    description,
-    priority,
-    subtaskCount,
-}: TaskCardProps) {
+export function TaskCard({ title, description, priority, subtaskCount }: TaskCardProps) {
     return (
         <div className="rounded-lg border border-slate-700 bg-slate-800 p-3 shadow-sm hover:border-slate-500 transition-colors cursor-grab">
             <div className="flex items-start justify-between gap-2">
