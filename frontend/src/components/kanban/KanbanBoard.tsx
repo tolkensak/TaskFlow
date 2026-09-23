@@ -1,7 +1,7 @@
 // src/components/kanban/KanbanBoard.tsx
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, gql } from "@apollo/client";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
@@ -11,10 +11,10 @@ import { TaskDialog } from "./TaskDialog";
 import type { Task, TaskStatus } from "@/types/task";
 
 const columns: { status: TaskStatus; title: string; color: string }[] = [
-    { status: "TODO", title: "📋 To Do", color: "bg-slate-900" },
-    { status: "IN_PROGRESS", title: "🚧 In Progress", color: "bg-blue-950" },
-    { status: "REVIEW", title: "👀 Review", color: "bg-amber-950" },
-    { status: "DONE", title: "✅ Done", color: "bg-green-950" },
+  { status: "TODO", title: "📋 To Do", color: "bg-slate-900" },
+  { status: "IN_PROGRESS", title: "🚧 In Progress", color: "bg-blue-950" },
+  { status: "REVIEW", title: "👀 Review", color: "bg-amber-950" },
+  { status: "DONE", title: "✅ Done", color: "bg-green-950" },
 ];
 
 const UPDATE_TASK_STATUS = gql`
@@ -28,6 +28,24 @@ const UPDATE_TASK_STATUS = gql`
 
 const TASK_STATUSES = ["TODO", "IN_PROGRESS", "REVIEW", "DONE"];
 
+const [tasks, setTasks] = useState<Task[]>([
+  {
+    id: "1",                              // ← unique
+    title: "Build the Kanban board",
+    description: "Create a drag-and-drop Kanban view",
+    priority: "HIGH",
+    status: "TODO",
+    subtaskCount: 1,
+  },
+  {
+    id: "2",                              // ← DIFFERENT id
+    title: "Wire up GraphQL",
+    description: "Connect to the Nest.js backend",
+    priority: "MEDIUM",
+    status: "TODO",
+  },
+]);
+
 interface KanbanBoardProps {
     tasks: Task[];
     onTasksChange?: () => void;
@@ -37,6 +55,8 @@ export default function KanbanBoard({
     tasks,
     onTasksChange,
 }: KanbanBoardProps) {
+    const draggedTaskIdRef = useRef<string | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -66,31 +86,30 @@ export default function KanbanBoard({
      * Handle drag start
      */
     const handleDragStart = (taskId: string) => {
-        setDraggedTaskId(taskId);
+        draggedTaskIdRef.current = taskId; // ← source of truth
+        setIsDragging(true); // ← for the visual ring
     };
 
     /**
      * Handle drop on a column
      */
-    const handleDrop = async (newStatus: string) => {
-        if (!draggedTaskId) return;
+    const handleDrop = async (newStatus: TaskStatus) => {
+        const taskId = draggedTaskIdRef.current;
+        if (!taskId) return;
 
-        const task = tasks.find((t) => t.id === draggedTaskId);
-        if (!task || task.status === newStatus) {
-            setDraggedTaskId(null);
-            return;
-        }
+        setTasks((prev) =>
+            prev.map((t) =>
+                t.id === taskId ? { ...t, status: newStatus } : t,
+            ),
+        );
 
-        try {
-            await updateTaskStatus({
-                variables: {
-                    id: draggedTaskId,
-                    input: { status: newStatus },
-                },
-            });
-        } finally {
-            setDraggedTaskId(null);
-        }
+        draggedTaskIdRef.current = null;
+        setIsDragging(false);
+    };
+
+    const handleDragEnd = () => {
+        draggedTaskIdRef.current = null;
+        setIsDragging(false);
     };
 
     /**
@@ -102,7 +121,7 @@ export default function KanbanBoard({
     };
 
     return (
-        <>
+        <div onDragEnd={handleDragEnd} className="...">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h2 className="text-xl font-semibold">Task Board</h2>
@@ -128,9 +147,9 @@ export default function KanbanBoard({
                         status={column.status}
                         title={column.title}
                         color={column.color}
-                        tasks={tasks}
-                        isDragging={draggedTaskId !== null}
-                        onDragStart={(taskId) => setDraggedTaskId(taskId)}
+                        tasks={tasks.filter((t) => t.status === column.status)} // ← THE KEY LINE
+                        isDragging={isDragging}
+                        onDragStart={handleDragStart}
                         onDrop={handleDrop}
                         onTaskClick={(task) => {
                             setSelectedTask(task);
@@ -146,6 +165,6 @@ export default function KanbanBoard({
                 onOpenChange={setDialogOpen}
                 onSuccess={onTasksChange}
             />
-        </>
+        </div>
     );
 }

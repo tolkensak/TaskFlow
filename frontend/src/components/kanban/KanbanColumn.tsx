@@ -26,7 +26,7 @@ export function KanbanColumn({
     onTaskClick,
 }: KanbanColumnProps) {
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault(); // required to allow drop
+        e.preventDefault(); // ← REQUIRED — without this, onDrop never fires
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
