@@ -2,8 +2,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ApolloWrapper } from "@/components/ApolloWrapper";
+// import { ApolloWrapper } from "@/components/ApolloWrapper";
 import { setupGlobalErrorHandler } from "@/lib/error-handler";
+import { ApolloProvider } from "@/components/providers/ApolloProvider";
 
 // ✅ Set up global error handler as early as possible
 if (typeof window !== "undefined") {
@@ -27,15 +28,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
     children,
-}: Readonly<{
-    children: React.ReactNode;
-}>) {
+}: Readonly<{children: React.ReactNode;}>) {
     return (
         <html lang="en">
-            <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-            >
-                <ApolloWrapper>{children}</ApolloWrapper>
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+                {/* <ApolloWrapper>{children}</ApolloWrapper> */}
+                <ApolloProvider>{children}</ApolloProvider>
             </body>
         </html>
     );

@@ -1,27 +1,22 @@
-// frontend/src/lib/apollo-client.ts
-import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
+import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 
-const httpLink = createHttpLink({
-    uri: "http://localhost:3001/graphql", // ✅ Make sure this is correct
-    credentials: "include",
+const httpLink = new HttpLink({
+  uri: `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
 });
 
 const authLink = setContext((_, { headers }) => {
-    const token =
-        typeof window !== "undefined"
-            ? localStorage.getItem("accessToken")
-            : null;
-    console.log("🔑 Apollo sending token:", token ? "YES" : "NO");
-    return {
-        headers: {
-            ...headers,
-            authorization: token ? `Bearer ${token}` : "",
-        },
-    };
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  return {
+    headers: {
+      ...headers,
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+  };
 });
 
 export const client = new ApolloClient({
-    link: authLink.concat(httpLink),
-    cache: new InMemoryCache(),
+  link: authLink.concat(httpLink),
+  cache: new InMemoryCache(),
 });

@@ -11,10 +11,10 @@ import { TaskDialog } from "./TaskDialog";
 import type { Task, TaskStatus } from "@/types/task";
 
 const columns: { status: TaskStatus; title: string; color: string }[] = [
-  { status: "TODO", title: "📋 To Do", color: "bg-slate-900" },
-  { status: "IN_PROGRESS", title: "🚧 In Progress", color: "bg-blue-950" },
-  { status: "REVIEW", title: "👀 Review", color: "bg-amber-950" },
-  { status: "DONE", title: "✅ Done", color: "bg-green-950" },
+    { status: "TODO", title: "📋 To Do", color: "bg-slate-900" },
+    { status: "IN_PROGRESS", title: "🚧 In Progress", color: "bg-blue-950" },
+    { status: "REVIEW", title: "👀 Review", color: "bg-amber-950" },
+    { status: "DONE", title: "✅ Done", color: "bg-green-950" },
 ];
 
 const UPDATE_TASK_STATUS = gql`
@@ -28,33 +28,25 @@ const UPDATE_TASK_STATUS = gql`
 
 const TASK_STATUSES = ["TODO", "IN_PROGRESS", "REVIEW", "DONE"];
 
-const [tasks, setTasks] = useState<Task[]>([
-  {
-    id: "1",                              // ← unique
-    title: "Build the Kanban board",
-    description: "Create a drag-and-drop Kanban view",
-    priority: "HIGH",
-    status: "TODO",
-    subtaskCount: 1,
-  },
-  {
-    id: "2",                              // ← DIFFERENT id
-    title: "Wire up GraphQL",
-    description: "Connect to the Nest.js backend",
-    priority: "MEDIUM",
-    status: "TODO",
-  },
-]);
+export default function KanbanBoard() {
+    const [tasks, setTasks] = useState<Task[]>([
+        {
+            id: "1", // ← unique
+            title: "Build the Kanban board",
+            description: "Create a drag-and-drop Kanban view",
+            priority: "HIGH",
+            status: "TODO",
+            subtaskCount: 1,
+        },
+        {
+            id: "2", // ← DIFFERENT id
+            title: "Wire up GraphQL",
+            description: "Connect to the Nest.js backend",
+            priority: "MEDIUM",
+            status: "TODO",
+        },
+    ]);
 
-interface KanbanBoardProps {
-    tasks: Task[];
-    onTasksChange?: () => void;
-}
-
-export default function KanbanBoard({
-    tasks,
-    onTasksChange,
-}: KanbanBoardProps) {
     const draggedTaskIdRef = useRef<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -64,7 +56,7 @@ export default function KanbanBoard({
     const [updateTaskStatus] = useMutation(UPDATE_TASK_STATUS, {
         onCompleted: () => {
             toast.success("Task moved!");
-            onTasksChange?.();
+            setTasks((prev) => prev);
         },
         onError: (error) => {
             toast.error(`Failed to move task: ${error.message}`);
@@ -163,7 +155,14 @@ export default function KanbanBoard({
                 task={selectedTask}
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
-                onSuccess={onTasksChange}
+                onSuccess={() => {
+    // Whatever "success" means for you:
+    // - close the dialog
+    // - refetch tasks from GraphQL
+    // - do nothing (state already updated elsewhere)
+    setDialogOpen(false);
+    // Later: refetchTasks();
+  }}
             />
         </div>
     );
