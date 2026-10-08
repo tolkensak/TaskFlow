@@ -7,6 +7,9 @@ import { CreateTaskInput, UpdateTaskInput } from './dto/task.input';
 import { TaskAssignment } from './entities/task-assignment.entity';
 import { In } from 'typeorm';
 
+// Keep in sync with backend/src/modules/tasks/tasks.service.ts
+const DEFAULT_PROJECT_ID = "default-project";
+
 @Injectable()
 export class TasksService {
     constructor(

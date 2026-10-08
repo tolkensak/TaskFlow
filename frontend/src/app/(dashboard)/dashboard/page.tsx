@@ -10,7 +10,7 @@ export default function DashboardPage() {
   const { data, loading } = useQuery(GET_TASKS, {
     fetchPolicy: "cache-and-network",  // ← always fresh, but instant from cache
   });
-
+console.log("Dashboard tasks:", data);
   const tasks: Task[] = data?.tasks ?? [];
 
   const stats = [

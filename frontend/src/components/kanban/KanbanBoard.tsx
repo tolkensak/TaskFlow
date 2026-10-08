@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation, useSubscription, gql } from "@apollo/client";
 import { useRef, useState } from "react";
 import type { Task, TaskStatus } from "@/types/task";
 import { GET_TASKS, UPDATE_TASK_STATUS } from "@/lib/graphql/tasks";
 import { KanbanColumn } from "./KanbanColumn";
 import { TaskDialog } from "./TaskDialog";
+import { DEFAULT_PROJECT_ID } from "@/lib/constants";
 
 const COLUMNS: { status: TaskStatus; title: string; color: string }[] = [
   { status: "TODO", title: "📋 To Do", color: "bg-slate-900" },
@@ -14,10 +15,80 @@ const COLUMNS: { status: TaskStatus; title: string; color: string }[] = [
   { status: "DONE", title: "✅ Done", color: "bg-green-950" },
 ];
 
+const TASK_CREATED_SUBSCRIPTION = gql`
+  subscription TaskCreated($projectId: String!) {
+    taskCreated(projectId: $projectId) {
+      id
+      title
+      description
+      status
+      priority
+      projectId
+    }
+  }
+`;
+
+const TASK_UPDATED_SUBSCRIPTION = gql`
+  subscription TaskUpdated($projectId: String!) {
+    taskUpdated(projectId: $projectId) {
+      id
+      title
+      description
+      status
+      priority
+      projectId
+    }
+  }
+`;
+
 export function KanbanBoard() {
   const { data, loading, error, refetch } = useQuery(GET_TASKS, {
+    variables: { projectId: DEFAULT_PROJECT_ID },
     fetchPolicy: "cache-and-network",
   });
+
+console.log("Board tasks:", data?.tasks?.length, data?.tasks);
+
+  useSubscription(TASK_CREATED_SUBSCRIPTION, {
+    variables: { projectId: DEFAULT_PROJECT_ID },
+    onData: ({ client, data }) => {
+      const newTask = data.data?.taskCreated;
+      if (!newTask) return;
+
+      // Update Apollo cache — add to the list
+      const existing = client.readQuery({ query: GET_TASKS, variables: { projectId: DEFAULT_PROJECT_ID } });
+      if (existing) {
+        client.writeQuery({
+          query: GET_TASKS,
+          variables: { projectId: DEFAULT_PROJECT_ID },
+          data: { tasks: [...existing.tasks, newTask] },
+        });
+      }
+    },
+  });
+
+  useSubscription(TASK_UPDATED_SUBSCRIPTION, {
+    variables: { projectId: DEFAULT_PROJECT_ID },
+    onData: ({ client, data }) => {
+      const updatedTask = data.data?.taskUpdated;
+      if (!updatedTask) return;
+
+      // Update Apollo cache — replace the task
+      const existing = client.readQuery({ query: GET_TASKS, variables: { projectId: DEFAULT_PROJECT_ID } });
+      if (existing) {
+        client.writeQuery({
+          query: GET_TASKS,
+          variables: { projectId: DEFAULT_PROJECT_ID },
+          data: {
+            tasks: existing.tasks.map((t: any) =>
+              t.id === updatedTask.id ? updatedTask : t
+            ),
+          },
+        });
+      }
+    },
+  });
+
   const [updateTaskStatus] = useMutation(UPDATE_TASK_STATUS);
 
   const draggedTaskIdRef = useRef<string | null>(null);
