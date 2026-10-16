@@ -79,6 +79,7 @@ input RegisterInput {
 type Subscription {
   notificationReceived(userId: String!): Notification!
   taskCreated(projectId: String!): Task!
+  taskDeleted(projectId: String!): String!
   taskUpdated(projectId: String!): Task!
 }
 

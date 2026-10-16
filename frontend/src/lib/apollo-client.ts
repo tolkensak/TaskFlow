@@ -1,3 +1,42 @@
+// import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
+// import { setContext } from "@apollo/client/link/context";
+
+// const httpLink = createHttpLink({
+//     uri: `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
+//     credentials: "include",
+// });
+
+// const authLink = setContext((_, { headers }) => {
+//     const token =
+//         typeof window !== "undefined"
+//             ? localStorage.getItem("accessToken")
+//             : null;
+//     return {
+//         headers: {
+//             ...headers,
+//             authorization: token ? `Bearer ${token}` : "",
+//         },
+//     };
+// });
+
+// export const client = new ApolloClient({
+//     link: authLink.concat(httpLink),
+//     cache: new InMemoryCache({
+//         typePolicies: {
+//             Query: {
+//                 fields: {
+//                     tasks: {
+//                         // Always replace the array — no merging.
+//                         // The server is the source of truth for task lists.
+//                         merge(_, incoming) {
+//                             return incoming;
+//                         },
+//                     },
+//                 },
+//             },
+//         },
+//     }),
+// });
 // frontend/src/lib/apollo-client.ts
 import { ApolloClient, InMemoryCache, split, HttpLink } from '@apollo/client';
 import { setContext } from "@apollo/client/link/context";

@@ -16,7 +16,7 @@ const pubSub = new PubSub();
 @Resolver(() => Task)
 export class TasksResolver {
     constructor(
-        private tasksService: TasksService,
+        private readonly tasksService: TasksService,
         @Inject(REDIS_PUBLISHER) private publisher: Redis,
     ) {}
 
@@ -72,14 +72,30 @@ export class TasksResolver {
         return task;
     }
 
-    @Mutation(() => Boolean)
-    @UseGuards(JwtAuthGuard)
-    async deleteTask(
-        @CurrentUser() user: User,
-        @Args('id') id: string,
-    ): Promise<boolean> {
-        return this.tasksService.remove(user.id, id);
-    }
+@Mutation(() => Boolean)
+@UseGuards(JwtAuthGuard)                              // ← also add this! see below
+async deleteTask(
+    @CurrentUser() user: User,
+    @Args('id') id: string,
+): Promise<boolean> {
+  // 1. Fetch the task first to know its projectId
+  const task = await this.tasksService.findOne(id);
+  if (!task) return false;
+
+  // 2. Actually delete it
+  const deleted = await this.tasksService.remove(user.id, id);   // ← was: findOne(id)
+
+  // 3. Broadcast the deletion
+  if (deleted) {
+    await pubSub.publish(`taskDeleted.${task.projectId}`, {
+      projectId: task.projectId,
+      taskDeleted: id,
+    });
+  }
+
+  return !!deleted;
+}
+
     @Mutation(() => Task)
     @UseGuards(JwtAuthGuard)
     async assignUsersToTask(
@@ -143,5 +159,13 @@ export class TasksResolver {
     })
     taskUpdated(@Args('projectId') projectId: string): AsyncIterator<unknown> {
         return pubSub.asyncIterableIterator('taskUpdated');
+    }
+
+    @Subscription(() => String, {
+        filter: (payload, variables) =>
+            payload.projectId === variables.projectId,
+    })
+    taskDeleted(@Args('projectId') projectId: string): AsyncIterator<string> {
+        return pubSub.asyncIterableIterator(`taskDeleted.${projectId}`);
     }
 }
