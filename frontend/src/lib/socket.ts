@@ -26,7 +26,7 @@ export const getSocket = (userId: string, username: string): Socket => {
     currentUsername = username;
 
     // ✅ Create new socket
-    socket = io("http://localhost:3001/presence", {
+    socket = io(`${process.env.NEXT_PUBLIC_API_URL}/presence`, {
         query: {
             userId,
             username,

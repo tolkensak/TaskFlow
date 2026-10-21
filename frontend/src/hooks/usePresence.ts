@@ -44,7 +44,7 @@ export function usePresence(userId: string, username: string) {
                 socket = null;
             }
 
-            socket = io("http://localhost:3001/presence", {
+            socket = io(`${process.env.NEXT_PUBLIC_API_URL}/presence`, {
                 query: {
                     userId: userIdRef.current,
                     username: usernameRef.current,

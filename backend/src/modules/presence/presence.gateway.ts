@@ -29,7 +29,9 @@ import { PresenceService } from './presence.service';
  */
 @WebSocketGateway({
     cors: {
-        origin: 'http://localhost:3000',
+        origin: (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
+            .split(',')
+            .map((o) => o.trim()),
         credentials: true,
     },
     namespace: 'presence',
