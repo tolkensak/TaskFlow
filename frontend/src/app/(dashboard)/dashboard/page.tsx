@@ -6,10 +6,19 @@ import { GET_TASKS } from "@/lib/graphql/tasks";
 import { Button } from "@/components/ui/button";
 import type { Task } from "@/types/task";
 import { useTaskSubscriptions } from "@/hooks/useTaskSubscriptions";
+import { useRouter } from "next/navigation";
+import { GET_ME } from "@/graphql/queries/user";
 
 export default function DashboardPage() {
     useTaskSubscriptions();
-    
+
+    const router = useRouter();
+    const {
+        loading: userLoading,
+        error: userError,
+        data: userData,
+    } = useQuery(GET_ME);
+
     const { data, loading } = useQuery(GET_TASKS, {
         fetchPolicy: "cache-and-network", // ← always fresh, but instant from cache
     });
@@ -41,17 +50,28 @@ export default function DashboardPage() {
                 <div className="mb-8 flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-slate-100">
-                            Welcome back, Test User!
+                            Welcome back, {userData?.me?.name}!
                         </h1>
                         <p className="mt-1 text-sm text-slate-400">
                             Here&apos;s what&apos;s happening in your workspace
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href="/board">Open Kanban Board →</Link>
-                    </Button>
+                    <div>
+                        <Button className="py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
+                            <Link href="/board">Open Kanban Board</Link>
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                localStorage.removeItem("accessToken");
+                                localStorage.removeItem("refreshToken");
+                                router.push("/login");
+                            }}
+                            className="py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 ml-2"
+                        >
+                            Sign Out
+                        </Button>
+                    </div>
                 </div>
-
                 {loading && !data ? (
                     <p className="text-slate-400">Loading stats...</p>
                 ) : (

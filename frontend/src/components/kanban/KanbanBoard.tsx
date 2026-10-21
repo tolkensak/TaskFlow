@@ -9,6 +9,8 @@ import { TaskDialog } from "./TaskDialog";
 import { DEFAULT_PROJECT_ID } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { useTaskSubscriptions } from "@/hooks/useTaskSubscriptions";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const COLUMNS: { status: TaskStatus; title: string; color: string }[] = [
     { status: "TODO", title: "📋 To Do", color: "bg-slate-900" },
@@ -189,22 +191,40 @@ export function KanbanBoard() {
         setIsDragging(false);
     };
 
+    const router = useRouter();
+
     return (
         <div onDragEnd={handleDragEnd}>
             <div className="mb-6 flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-semibold text-slate-100">
+                    <h1 className="text-3xl font-bold text-slate-100">
                         Task Board
-                    </h2>
-                    <p className="text-sm text-slate-400">
+                    </h1>
+                    <p className="mt-1 text-sm text-slate-400">
                         {loading
                             ? "Loading..."
                             : `${tasks.length} task${tasks.length === 1 ? "" : "s"} total`}
                     </p>
                 </div>
-                <Button onClick={openCreateDialog} size="sm">
-                    + New Task
-                </Button>
+                <div>
+                    <Button className="py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
+                        onClick={openCreateDialog}>
+                        + New Task
+                    </Button>
+                    <Button className="py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 ml-2">
+                        <Link href="/dashboard">Open Dashboard</Link>
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            localStorage.removeItem("accessToken");
+                            localStorage.removeItem("refreshToken");
+                            router.push("/login");
+                        }}
+                        className="py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 ml-2"
+                    >
+                        Sign Out
+                    </Button>
+                </div>
             </div>
 
             {error && (
