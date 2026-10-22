@@ -1,4 +1,5 @@
 // backend/src/main.ts
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import session from 'express-session';
@@ -35,4 +36,5 @@ async function bootstrap() {
         `🚀 GraphQL Playground available at http://localhost:${port}/graphql`,
     );
 }
+
 bootstrap();
