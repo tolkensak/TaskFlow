@@ -3,7 +3,6 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
 
 # Backend
 backend/dist/
@@ -13,6 +12,7 @@ backend/.env
 frontend/.next/
 frontend/out/
 frontend/dist/
+frontend/package-lock.json
 
 # IDE
 .vscode/
