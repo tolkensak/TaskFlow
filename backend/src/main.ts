@@ -1,8 +1,10 @@
 // backend/src/main.ts
 
+import session from 'express-session';
+import RedisStore from 'connect-redis';
+import Redis from 'ioredis';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import session from 'express-session';
 import passport from 'passport';
 
 async function bootstrap() {
@@ -17,8 +19,11 @@ async function bootstrap() {
         credentials: true,
     });
 
+    const redisClient = new Redis(process.env.REDIS_URL!);
+
     app.use(
         session({
+            store: new RedisStore({ client: redisClient }),
             secret: process.env.JWT_SECRET || 'default-secret',
             resave: false,
             saveUninitialized: false,

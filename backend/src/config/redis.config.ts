@@ -4,11 +4,13 @@ import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
 export const createRedisClient = (configService: ConfigService) => {
-    return new Redis({
-        host: configService.get<string>('REDIS_HOST', 'localhost'),
-        port: configService.get<number>('REDIS_PORT', 6379),
-        password: configService.get<string>('REDIS_PASSWORD'),
-        db: configService.get<number>('REDIS_DB', 0),
+    // Grab the connection string (preferring configService for consistency)
+    const redisUrl = configService.get<string>('REDIS_URL') || process.env.REDIS_URL;
+    if (!redisUrl) {
+        throw new Error('REDIS_URL is not defined in the environment configuration.');
+    }
+
+    return new Redis(redisUrl, {
         retryStrategy: (times) => {
             const delay = Math.min(times * 50, 2000);
             return delay;
