@@ -65,21 +65,29 @@ export function KanbanBoard() {
 
     useSubscription(TASK_CREATED_SUBSCRIPTION, {
         variables: { projectId: DEFAULT_PROJECT_ID },
+        // ✅ The fixed version
         onData: ({ client, data }) => {
             const newTask = data.data?.taskCreated;
             if (!newTask) return;
 
-            // Update Apollo cache — add to the list
             const existing = client.readQuery({
                 query: GET_TASKS,
                 variables: { projectId: DEFAULT_PROJECT_ID },
             });
             if (existing) {
-                client.writeQuery({
-                    query: GET_TASKS,
-                    variables: { projectId: DEFAULT_PROJECT_ID },
-                    data: { tasks: [...existing.tasks, newTask] },
-                });
+                console.log('existing');
+                const taskExists = existing.tasks.some(
+                    (t: Task) => t.id === newTask.id,
+                );
+
+                console.log('taskExists: ', taskExists);
+                if (!taskExists) {
+                    client.writeQuery({
+                        query: GET_TASKS,
+                        variables: { projectId: DEFAULT_PROJECT_ID },
+                        data: { tasks: [...existing.tasks, newTask] },
+                    });
+                }
             }
         },
     });
@@ -207,8 +215,10 @@ export function KanbanBoard() {
                     </p>
                 </div>
                 <div>
-                    <Button className="py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
-                        onClick={openCreateDialog}>
+                    <Button
+                        className="py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50"
+                        onClick={openCreateDialog}
+                    >
                         + New Task
                     </Button>
                     <Button className="py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 ml-2">
