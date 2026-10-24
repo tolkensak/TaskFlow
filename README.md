@@ -24,7 +24,7 @@ This project was built to demonstrate enterprise-grade architecture, combining r
 - **Hybrid Database Architecture:** 
   - *PostgreSQL* for highly relational data (Users, Tasks, Task Assignments).
   - *MongoDB* for flexible document storage (Notifications).
-  - *Redis* for high-performance caching, pub/sub, and WebSocket scaling.
+  - *Redis* for WebSocket Pub/Sub and real-time event broadcasting.
 
 <br />
 
