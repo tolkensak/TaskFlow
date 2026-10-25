@@ -28,6 +28,7 @@ const TASK_CREATED_SUBSCRIPTION = gql`
             status
             priority
             projectId
+            authorId
             createdAt
             updatedAt
         }
@@ -43,6 +44,7 @@ const TASK_UPDATED_SUBSCRIPTION = gql`
             status
             priority
             projectId
+            authorId
             createdAt
             updatedAt
         }
@@ -70,17 +72,24 @@ export function KanbanBoard() {
             const newTask = data.data?.taskCreated;
             if (!newTask) return;
 
+            // 1. Get the current user from localStorage
+            const storedUser = localStorage.getItem("user");
+            const currentUser = storedUser ? JSON.parse(storedUser) : null;
+
+            // 2. If the task was created by someone else, ignore it!
+            if (currentUser && newTask.authorId !== currentUser.id) {
+                return;
+            }
+
+            // 3. Proceed with the de-duplication and cache write
             const existing = client.readQuery({
                 query: GET_TASKS,
                 variables: { projectId: DEFAULT_PROJECT_ID },
             });
             if (existing) {
-                console.log('existing');
                 const taskExists = existing.tasks.some(
                     (t: Task) => t.id === newTask.id,
                 );
-
-                console.log('taskExists: ', taskExists);
                 if (!taskExists) {
                     client.writeQuery({
                         query: GET_TASKS,
