@@ -19,44 +19,6 @@ const COLUMNS: { status: TaskStatus; title: string; color: string }[] = [
     { status: "DONE", title: "✅ Done", color: "bg-green-950" },
 ];
 
-const TASK_CREATED_SUBSCRIPTION = gql`
-    subscription TaskCreated($projectId: String!) {
-        taskCreated(projectId: $projectId) {
-            id
-            title
-            description
-            status
-            priority
-            projectId
-            authorId
-            createdAt
-            updatedAt
-        }
-    }
-`;
-
-const TASK_UPDATED_SUBSCRIPTION = gql`
-    subscription TaskUpdated($projectId: String!) {
-        taskUpdated(projectId: $projectId) {
-            id
-            title
-            description
-            status
-            priority
-            projectId
-            authorId
-            createdAt
-            updatedAt
-        }
-    }
-`;
-
-const TASK_DELETED_SUBSCRIPTION = gql`
-    subscription TaskDeleted($projectId: String!) {
-        taskDeleted(projectId: $projectId)
-    }
-`;
-
 export function KanbanBoard() {
     const { data, loading, error, refetch } = useQuery(GET_TASKS, {
         variables: { projectId: DEFAULT_PROJECT_ID },
@@ -64,91 +26,6 @@ export function KanbanBoard() {
     });
 
     useTaskSubscriptions();
-
-    useSubscription(TASK_CREATED_SUBSCRIPTION, {
-        variables: { projectId: DEFAULT_PROJECT_ID },
-        // ✅ The fixed version
-        onData: ({ client, data }) => {
-            const newTask = data.data?.taskCreated;
-            if (!newTask) return;
-
-            // 1. Get the current user from localStorage
-            const storedUser = localStorage.getItem("user");
-            const currentUser = storedUser ? JSON.parse(storedUser) : null;
-
-            // 2. If the task was created by someone else, ignore it!
-            if (currentUser && newTask.authorId !== currentUser.id) {
-                return;
-            }
-
-            // 3. Proceed with the de-duplication and cache write
-            const existing = client.readQuery({
-                query: GET_TASKS,
-                variables: { projectId: DEFAULT_PROJECT_ID },
-            });
-            if (existing) {
-                const taskExists = existing.tasks.some(
-                    (t: Task) => t.id === newTask.id,
-                );
-                if (!taskExists) {
-                    client.writeQuery({
-                        query: GET_TASKS,
-                        variables: { projectId: DEFAULT_PROJECT_ID },
-                        data: { tasks: [...existing.tasks, newTask] },
-                    });
-                }
-            }
-        },
-    });
-
-    useSubscription(TASK_UPDATED_SUBSCRIPTION, {
-        variables: { projectId: DEFAULT_PROJECT_ID },
-        onData: ({ client, data }) => {
-            const updatedTask = data.data?.taskUpdated;
-            if (!updatedTask) return;
-
-            // Update Apollo cache — replace the task
-            const existing = client.readQuery({
-                query: GET_TASKS,
-                variables: { projectId: DEFAULT_PROJECT_ID },
-            });
-            if (existing) {
-                client.writeQuery({
-                    query: GET_TASKS,
-                    variables: { projectId: DEFAULT_PROJECT_ID },
-                    data: {
-                        tasks: existing.tasks.map((t: any) =>
-                            t.id === updatedTask.id ? updatedTask : t,
-                        ),
-                    },
-                });
-            }
-        },
-    });
-
-    useSubscription(TASK_DELETED_SUBSCRIPTION, {
-        variables: { projectId: DEFAULT_PROJECT_ID },
-        onData: ({ client, data }) => {
-            const deletedId = data.data?.taskDeleted;
-            if (!deletedId) return;
-
-            const existing = client.readQuery<{ tasks: Task[] }>({
-                query: GET_TASKS,
-                variables: { projectId: DEFAULT_PROJECT_ID },
-            });
-            if (!existing) return;
-
-            client.writeQuery({
-                query: GET_TASKS,
-                variables: { projectId: DEFAULT_PROJECT_ID },
-                data: {
-                    tasks: existing.tasks.filter((t) => t.id !== deletedId),
-                },
-            });
-
-            client.cache.gc(); // automatically evicts unreferenced Task:xxx entities
-        },
-    });
 
     const [updateTaskStatus] = useMutation(UPDATE_TASK_STATUS);
 

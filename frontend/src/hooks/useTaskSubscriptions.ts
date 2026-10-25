@@ -14,6 +14,7 @@ const TASK_CREATED = gql`
             status
             priority
             projectId
+            authorId
             createdAt
             updatedAt
         }
@@ -29,6 +30,7 @@ const TASK_UPDATED = gql`
             status
             priority
             projectId
+            authorId
             createdAt
             updatedAt
         }
@@ -44,66 +46,90 @@ const TASK_DELETED = gql`
 export function useTaskSubscriptions() {
     const client = useApolloClient();
 
-    // Identify the field we modify on the cache
-    const tasksFieldName =
-        client.cache.identify({
-            __typename: "Query",
-            id: null,
-        } as any) || "ROOT_QUERY";
+    // Helper to get current user ID
+    const getCurrentUserId = () => {
+        if (typeof window === "undefined") return null;
+        const storedUser = localStorage.getItem("user");
+        return storedUser ? JSON.parse(storedUser).id : null;
+    };
 
     useSubscription(TASK_CREATED, {
         variables: { projectId: DEFAULT_PROJECT_ID },
-        onData: ({ client: c, data }) => {
-            const task = data.data?.taskCreated;
-            if (!task) return;
+        onData: ({ client, data }) => {
+            const newTask = data.data?.taskCreated;
+            if (!newTask) return;
 
-            c.cache.modify({
-                fields: {
-                    tasks(existingTaskRefs = [], { toReference }) {
-                        const refs = existingTaskRefs as any[];
-                        // Avoid duplicates
-                        const alreadyExists = refs.some(
-                            (ref) => ref.__ref === `Task:${task.id}`,
-                        );
-                        if (alreadyExists) return refs;
-                        return [...refs, toReference(task)];
-                    },
-                },
+            const currentUserId = getCurrentUserId();
+            if (currentUserId && newTask.authorId !== currentUserId) return; // 👈 Ignore other users' tasks
+
+            const existing = client.readQuery({
+                query: GET_TASKS,
+                variables: { projectId: DEFAULT_PROJECT_ID },
             });
+            if (existing) {
+                const taskExists = existing.tasks.some(
+                    (t: Task) => t.id === newTask.id,
+                );
+                if (!taskExists) {
+                    client.writeQuery({
+                        query: GET_TASKS,
+                        variables: { projectId: DEFAULT_PROJECT_ID },
+                        data: { tasks: [...existing.tasks, newTask] },
+                    });
+                }
+            }
         },
     });
 
     useSubscription(TASK_UPDATED, {
         variables: { projectId: DEFAULT_PROJECT_ID },
-        onData: ({ client: c, data }) => {
-            const task = data.data?.taskUpdated;
-            if (!task) return;
+        onData: ({ client, data }) => {
+            const updatedTask = data.data?.taskUpdated;
+            if (!updatedTask) return;
 
-            // The normalized cache updates Task:<id> automatically.
-            // No need to modify the array — Apollo will notify watchers.
+            const currentUserId = getCurrentUserId();
+            if (currentUserId && updatedTask.authorId !== currentUserId) return; // 👈 Ignore
+
+            const existing = client.readQuery({
+                query: GET_TASKS,
+                variables: { projectId: DEFAULT_PROJECT_ID },
+            });
+            if (existing) {
+                client.writeQuery({
+                    query: GET_TASKS,
+                    variables: { projectId: DEFAULT_PROJECT_ID },
+                    data: {
+                        tasks: existing.tasks.map((t: any) =>
+                            t.id === updatedTask.id ? updatedTask : t,
+                        ),
+                    },
+                });
+            }
         },
     });
 
     useSubscription(TASK_DELETED, {
         variables: { projectId: DEFAULT_PROJECT_ID },
-        onData: ({ client: c, data }) => {
+        onData: ({ client, data }) => {
             const deletedId = data.data?.taskDeleted;
             if (!deletedId) return;
 
-            c.cache.modify({
-                fields: {
-                    tasks(existingTaskRefs = [], { readField }) {
-                        const refs = existingTaskRefs as any[];
-                        return refs.filter((ref) => {
-                            const id = readField<string>("id", ref);
-                            return id !== deletedId;
-                        });
-                    },
+            // For delete, we don't have the authorId in the payload.
+            // But since the backend filters the query, if we don't have it in our cache, it's safe to run the filter anyway.
+            const existing = client.readQuery<{ tasks: Task[] }>({
+                query: GET_TASKS,
+                variables: { projectId: DEFAULT_PROJECT_ID },
+            });
+            if (!existing) return;
+
+            client.writeQuery({
+                query: GET_TASKS,
+                variables: { projectId: DEFAULT_PROJECT_ID },
+                data: {
+                    tasks: existing.tasks.filter((t) => t.id !== deletedId),
                 },
             });
-
-            c.cache.evict({ id: `Task:${deletedId}` });
-            c.cache.gc();
+            client.cache.gc();
         },
     });
 }
