@@ -16,6 +16,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-06B6D4)](https://tailwindcss.com/)
 [![Radix UI](https://img.shields.io/badge/Radix_UI-Accessible-161618)](https://www.radix-ui.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Status](https://img.shields.io/badge/Status-Active-brightgreen)](https://github.com/tolkensak/TaskFlow)
 
 <br />
 
