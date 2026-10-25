@@ -34,8 +34,7 @@ export class TasksService {
     }
 
     async findAll(userId: string, projectId?: string): Promise<Task[]> {
-        const where: any = {};
-        if (projectId) where.projectId = projectId;
+        const where = { authorId: userId, projectId };
 
         return this.tasksRepository.find({
             where,
